@@ -1,163 +1,109 @@
-import { useEffect, useState } from "react";
-import AdminLayout from "../../layouts/AdminLayout";
-import { getSummary } from "../../api/reports";
-import { listTransactions } from "../../api/reports";
-import type { ApiReportSummary, ApiTransaction } from "../../types/api";
+import { Activity, BadgeDollarSign, CircleAlert, Wallet } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { pagesApi } from '../../api/pagesApi'
+import { reportsApi } from '../../api/reportsApi'
+import ActivityTable from '../../components/admin/ActivityTable'
+import PageHeader from '../../components/admin/PageHeader'
+import Button from '../../components/common/Button'
+import Card from '../../components/common/Card'
+import LoadingState from '../../components/common/LoadingState'
+import StatCard from '../../components/common/StatCard'
+import type { ReportPayload } from '../../types/report'
+import { formatCurrency } from '../../utils/formatters'
 
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
-  return (
-    <div
-      style={{
-        background: "white",
-        borderRadius: "12px",
-        padding: "24px",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-      }}
-    >
-      <p style={{ margin: "0 0 8px", fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>{label}</p>
-      <p style={{ margin: 0, fontSize: "28px", fontWeight: 700, color: "#111827" }}>{value}</p>
-      {sub && <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#9ca3af" }}>{sub}</p>}
-    </div>
-  );
-}
-
-const statusColors: Record<string, string> = {
-  success: "#dcfce7",
-  failed: "#fee2e2",
-  pending: "#fef9c3",
-};
-
-const statusText: Record<string, string> = {
-  success: "#166534",
-  failed: "#991b1b",
-  pending: "#854d0e",
-};
+const defaultFilters = {
+  dateRange: '30d',
+  pageId: 'all',
+  status: 'all',
+  method: 'all',
+} as const
 
 export default function DashboardPage() {
-  const [summary, setSummary] = useState<ApiReportSummary | null>(null);
-  const [recent, setRecent] = useState<ApiTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState<ReportPayload | null>(null)
+  const [pagesCount, setPagesCount] = useState(0)
 
   useEffect(() => {
-    void Promise.all([getSummary(), listTransactions()])
-      .then(([s, txs]) => {
-        setSummary(s);
-        setRecent(txs.slice(0, 10));
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    reportsApi.getReport(defaultFilters).then(setReport)
+    pagesApi.list().then((pages) => setPagesCount(pages.length))
+  }, [])
+
+  if (!report) return <LoadingState />
 
   return (
-    <AdminLayout title="Dashboard">
-      {loading ? (
-        <p style={{ color: "#6b7280" }}>Loading...</p>
-      ) : (
-        <>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "16px",
-              marginBottom: "32px",
-            }}
-          >
-            <StatCard
-              label="Total Revenue"
-              value={`$${Number(summary?.total_amount ?? 0).toFixed(2)}`}
-            />
-            <StatCard
-              label="Transactions"
-              value={summary?.total_transactions ?? 0}
-            />
-            <StatCard
-              label="Successful"
-              value={summary?.success_count ?? 0}
-              sub={`${summary?.failed_count ?? 0} failed`}
-            />
-            <StatCard
-              label="Pending"
-              value={summary?.pending_count ?? 0}
-            />
-          </div>
+    <div className="stack-lg">
+      <PageHeader
+        title="Wayspend dashboard"
+        description="Monitor collection performance, recent activity, and rollout readiness for your demo environment."
+        actions={
+          <Link to="/admin/payment-pages/new">
+            <Button>Create new page</Button>
+          </Link>
+        }
+      />
 
-          <div
-            style={{
-              background: "white",
-              borderRadius: "12px",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              overflow: "hidden",
-            }}
-          >
-            <div style={{ padding: "16px 24px", borderBottom: "1px solid #f3f4f6" }}>
-              <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 600, color: "#111827" }}>
-                Recent Transactions
-              </h2>
+      <div className="stats-grid">
+        <StatCard title="Total collected" value={formatCurrency(report.summary.totalCollected)} icon={<BadgeDollarSign size={18} />} footnote="Successful payments in the selected window" />
+        <StatCard title="Average payment amount" value={formatCurrency(report.summary.averagePaymentAmount)} icon={<Wallet size={18} />} footnote="Across successful demo payments" />
+        <StatCard title="Successful payments" value={String(report.summary.successfulPayments)} icon={<Activity size={18} />} footnote={`${pagesCount} pages are currently configured`} />
+        <StatCard title="Failed or pending" value={String(report.summary.failedPayments + report.summary.pendingPayments)} icon={<CircleAlert size={18} />} footnote="Use reporting to isolate statuses and methods" />
+      </div>
+
+      <div className="dashboard-grid">
+        <div className="stack-lg">
+          <ActivityTable transactions={report.transactions.slice(0, 6)} />
+        </div>
+        <div className="stack-lg">
+          <Card className="insight-card">
+            <div className="card-header">
+              <div>
+                <div className="badge badge-warning">Insight</div>
+                <h2 className="card-title" style={{ color: 'var(--cream-50)' }}>
+                  Suggested next move
+                </h2>
+              </div>
             </div>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "#f9fafb" }}>
-                  {["Date", "Payer", "Amount", "Method", "Status"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: "10px 24px",
-                        textAlign: "left",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        color: "#6b7280",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recent.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} style={{ padding: "32px 24px", textAlign: "center", color: "#9ca3af" }}>
-                      No transactions yet
-                    </td>
-                  </tr>
-                ) : (
-                  recent.map((tx) => (
-                    <tr key={tx.id} style={{ borderTop: "1px solid #f3f4f6" }}>
-                      <td style={{ padding: "12px 24px", fontSize: "14px", color: "#374151" }}>
-                        {new Date(tx.created_at).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: "12px 24px", fontSize: "14px", color: "#374151" }}>
-                        {tx.payer_name ?? tx.payer_email ?? "—"}
-                      </td>
-                      <td style={{ padding: "12px 24px", fontSize: "14px", fontWeight: 600, color: "#111827" }}>
-                        ${Number(tx.amount).toFixed(2)}
-                      </td>
-                      <td style={{ padding: "12px 24px", fontSize: "14px", color: "#374151", textTransform: "capitalize" }}>
-                        {tx.payment_method.replace("_", " ")}
-                      </td>
-                      <td style={{ padding: "12px 24px" }}>
-                        <span
-                          style={{
-                            padding: "2px 10px",
-                            borderRadius: "999px",
-                            fontSize: "12px",
-                            fontWeight: 600,
-                            background: statusColors[tx.status] ?? "#f3f4f6",
-                            color: statusText[tx.status] ?? "#374151",
-                          }}
-                        >
-                          {tx.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-    </AdminLayout>
-  );
+            <div className="stack-md">
+              <p style={{ margin: 0 }}>
+                Deposit collection pages are converting at higher amounts than fixed balance pages in the current demo data.
+              </p>
+              <p className="muted-text">
+                Push the builder flow next, then walk stakeholders from creation to public payment to reporting in one pass.
+              </p>
+              <Link to="/admin/payment-pages">
+                <Button variant="secondary">Open payment pages</Button>
+              </Link>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="card-header">
+              <div>
+                <h2 className="card-title">Rollout readiness</h2>
+                <p className="card-subtitle">What the current frontend already supports for backend hookup.</p>
+              </div>
+            </div>
+            <div className="stack-sm">
+              <div className="summary-row">
+                <span>Admin shell and guarded routes</span>
+                <strong>Ready</strong>
+              </div>
+              <div className="summary-row">
+                <span>Builder and live preview</span>
+                <strong>Ready</strong>
+              </div>
+              <div className="summary-row">
+                <span>Public payment flow</span>
+                <strong>Ready for Stripe seam</strong>
+              </div>
+              <div className="summary-row">
+                <span>Reporting</span>
+                <strong>Ready for API swap</strong>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
 }

@@ -1,72 +1,58 @@
-import { useLocation } from "react-router-dom";
-
-interface SuccessState {
-  amount?: number;
-  payerEmail?: string;
-  title?: string;
-}
+import { CheckCircle2 } from 'lucide-react'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import Button from '../../components/common/Button'
+import PaymentStatusBanner from '../../components/payment/PaymentStatusBanner'
+import type { PaymentPage } from '../../types/paymentPage'
+import type { Transaction } from '../../types/transaction'
+import { formatCurrency, formatDateTime } from '../../utils/formatters'
 
 export default function PaymentSuccessPage() {
-  const location = useLocation();
-  const state = (location.state ?? {}) as SuccessState;
+  const { slug = '' } = useParams()
+  const location = useLocation()
+  const transaction = (location.state as { transaction?: Transaction } | null)?.transaction
+  const page = (location.state as { page?: PaymentPage } | null)?.page
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f9fafb",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-      }}
-    >
-      <div
-        style={{
-          background: "white",
-          borderRadius: "16px",
-          padding: "48px 40px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          textAlign: "center",
-          maxWidth: "440px",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            width: "64px",
-            height: "64px",
-            borderRadius: "50%",
-            background: "#dcfce7",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 24px",
-            fontSize: "28px",
-          }}
-        >
-          ✓
-        </div>
-        <h1 style={{ margin: "0 0 8px", fontSize: "24px", fontWeight: 700, color: "#111827" }}>
-          Payment Successful
-        </h1>
-        {state.title && (
-          <p style={{ margin: "0 0 16px", color: "#6b7280", fontSize: "15px" }}>{state.title}</p>
-        )}
-        {state.amount !== undefined && (
-          <p style={{ margin: "0 0 8px", fontSize: "32px", fontWeight: 700, color: "#166534" }}>
-            ${state.amount.toFixed(2)}
-          </p>
-        )}
-        {state.payerEmail && (
-          <p style={{ margin: "12px 0 0", color: "#6b7280", fontSize: "14px" }}>
-            A receipt will be sent to <strong>{state.payerEmail}</strong>
-          </p>
-        )}
-        <p style={{ margin: "24px 0 0", color: "#9ca3af", fontSize: "13px" }}>
-          Thank you for your payment. You may close this window.
-        </p>
+    <div className="status-page">
+      <div className="status-icon" style={{ background: 'var(--success-100)', color: 'var(--success-500)' }}>
+        <CheckCircle2 size={30} aria-hidden="true" />
       </div>
+      <PaymentStatusBanner
+        tone="success"
+        eyebrow="Payment received"
+        title="Your payment was submitted successfully."
+        description="This receipt-style state confirms the demo transaction and leaves a clear next step for the payer."
+      >
+        <div className="stack-sm">
+          <div className="summary-row">
+            <span>Transaction ID</span>
+            <strong>{transaction?.id ?? 'txn-demo-placeholder'}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Amount paid</span>
+            <strong>{formatCurrency(transaction?.amount ?? page?.fixedAmount ?? 0)}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Provider</span>
+            <strong>{page?.organizationName ?? 'Wayspend provider'}</strong>
+          </div>
+          <div className="summary-row">
+            <span>Date</span>
+            <strong>{formatDateTime(transaction?.createdAt ?? new Date().toISOString())}</strong>
+          </div>
+          <p className="muted-text">
+            Next step: the provider team can reconcile this demo payment in the reporting view immediately.
+          </p>
+          <div className="action-row">
+            <Link to={`/pay/${slug}`}>
+              <Button variant="secondary">Make another payment</Button>
+            </Link>
+            <Link to="/login">
+              <Button>Return to admin</Button>
+            </Link>
+          </div>
+        </div>
+      </PaymentStatusBanner>
     </div>
-  );
+  )
 }
