@@ -5,3 +5,4 @@ export const AUTH0_DOMAIN = import.meta.env.VITE_AUTH0_DOMAIN ?? 'demo-tenant.au
 export const AUTH0_CLIENT_ID = import.meta.env.VITE_AUTH0_CLIENT_ID ?? 'demo-client-id'
 export const AUTH0_AUDIENCE = import.meta.env.VITE_AUTH0_AUDIENCE ?? ''
 export const APP_ORIGIN = import.meta.env.VITE_APP_ORIGIN ?? 'http://localhost:5173'
+export const REQUIRE_VERIFIED_ADMIN = import.meta.env.VITE_REQUIRE_VERIFIED_ADMIN !== 'false'
