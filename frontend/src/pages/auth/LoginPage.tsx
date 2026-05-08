@@ -9,15 +9,20 @@ export default function LoginPage() {
   const nextPath = (location.state as { from?: string } | null)?.from ?? '/dashboard'
 
   return (
-    <div className="stack-lg">
+    <div className="auth-entry stack-lg">
       <div className="stack-sm">
-        <div className="badge badge-info">Client login</div>
-        <h1>Sign in to your Wayspend workspace.</h1>
-        <p>Authenticate with Auth0, sync your profile through the backend, and open the dashboard you’re allowed to access.</p>
+        <div className="auth-eyebrow-pill">Client login</div>
+        <h1 className="auth-title">Sign in to your Wayspend workspace.</h1>
+        <p className="auth-copy">
+          Authenticate with Auth0, sync your profile through the backend, and open the dashboard you&apos;re allowed
+          to access.
+        </p>
       </div>
-      <div className="stack-md">
+
+      <div className="auth-cta-shell stack-md">
         <Button
           block
+          className="auth-cta-button"
           onClick={async () => {
             await login(nextPath)
           }}
@@ -25,9 +30,14 @@ export default function LoginPage() {
           Continue to login
           <ArrowRight size={16} aria-hidden="true" />
         </Button>
+        <p className="auth-helper-copy">Single sign-on routes you into the right workspace after authentication.</p>
       </div>
-      <p className="muted-text">
-        Need an account? <Link to="/signup">Create one</Link>
+
+      <p className="auth-link-row">
+        Need an account?{' '}
+        <Link className="auth-inline-link" to="/signup">
+          Create one
+        </Link>
       </p>
     </div>
   )

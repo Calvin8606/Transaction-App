@@ -1,6 +1,8 @@
-import { BarChart3, CreditCard, LayoutDashboard, LogOut, Settings, Sparkles } from 'lucide-react'
+import { BarChart3, CreditCard, LayoutDashboard, LogOut, Settings } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
+import WayspendLogo from '../common/WayspendLogo'
 import { useSession } from '../../context/SessionContext'
+
 export default function Sidebar() {
   const { logout, user } = useSession()
   const navigate = useNavigate()
@@ -19,13 +21,7 @@ export default function Sidebar() {
   return (
     <aside className="admin-sidebar">
       <div className="admin-brand">
-        <div className="brand-mark">
-          <Sparkles size={18} aria-hidden="true" />
-        </div>
-        <div className="brand-copy">
-          <strong>Wayspend</strong>
-          <span>Provider payment platform</span>
-        </div>
+        <WayspendLogo tone="light" size={18} />
       </div>
 
       <nav className="sidebar-nav" aria-label="Primary workspace">

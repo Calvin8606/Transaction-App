@@ -1,5 +1,6 @@
-import { CreditCard, LayoutDashboard, ShieldCheck, Workflow } from 'lucide-react'
-import { Outlet } from 'react-router-dom'
+import { ArrowLeft, CreditCard, LayoutDashboard, ShieldCheck, Workflow } from 'lucide-react'
+import { Link, Outlet } from 'react-router-dom'
+import WayspendLogo from '../components/common/WayspendLogo'
 
 const features = [
   {
@@ -28,31 +29,42 @@ export default function AuthLayout() {
   return (
     <div className="auth-layout">
       <main className="auth-panel">
-        <Outlet />
+        <div className="auth-panel-shell">
+          <Link to="/" className="auth-home-link" aria-label="Back to Wayspend home">
+            <ArrowLeft size={16} aria-hidden="true" />
+            <span>Back to home</span>
+          </Link>
+
+          <div className="auth-form-shell">
+            <Outlet />
+          </div>
+        </div>
       </main>
       <aside className="auth-aside">
-        <div className="stack-md">
-          <div className="brand-copy">
-            <strong>Wayspend</strong>
-            <span>Healthcare payments for modern provider teams</span>
+        <div className="auth-aside-inner">
+          <div className="auth-aside-copy stack-md">
+            <p className="auth-aside-eyebrow">Client workspace</p>
+            <WayspendLogo tone="light" size={28} />
+            <p className="auth-aside-kicker">Healthcare payments for modern provider teams</p>
+            <h2 className="auth-aside-title">
+              The fastest way to launch a polished payment workspace that still feels enterprise-ready.
+            </h2>
+            <p className="auth-aside-body">
+              Structured for Auth0, Stripe test mode, backend API handoff, and live page distribution.
+            </p>
           </div>
-          <h2 style={{ margin: 0, color: 'var(--cream-50)', fontSize: '2.2rem' }}>
-            The fastest way to launch a polished payment workspace that still feels enterprise-ready.
-          </h2>
-          <p className="muted-text" style={{ color: 'rgba(244, 236, 221, 0.76)' }}>
-            Structured for Auth0, Stripe test mode, backend API handoff, and live page distribution.
-          </p>
-        </div>
-        <div className="auth-feature-grid">
-          {features.map(({ title, description, icon: Icon }) => (
-            <div key={title} className="auth-feature-card">
-              <Icon size={18} />
-              <h3>{title}</h3>
-              <p className="muted-text" style={{ color: 'rgba(244, 236, 221, 0.76)' }}>
-                {description}
-              </p>
-            </div>
-          ))}
+
+          <div className="auth-feature-grid">
+            {features.map(({ title, description, icon: Icon }) => (
+              <article key={title} className="auth-feature-card">
+                <div className="auth-feature-icon">
+                  <Icon size={18} aria-hidden="true" />
+                </div>
+                <h3>{title}</h3>
+                <p className="auth-feature-copy">{description}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </aside>
     </div>
